@@ -2,9 +2,22 @@ package main
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
+	"os"
+	"log"
+	"github.com/Triplem5ds/BittorrentClient/torrentfile"
+	
 )
 func main() {
-    fmt.Println("Hello, World!")
-	logrus.Info("Logging with Logrus")
+	inputFilePath := os.Args[1]
+	// outputFilePath := os.Args[2]
+
+	torrentFile, err := torrentfile.Open(inputFilePath)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("%v", torrentFile)
+
+
 }
