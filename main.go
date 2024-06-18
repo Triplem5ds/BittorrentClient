@@ -6,5 +6,5 @@ import (
 )
 func main() {
     fmt.Println("Hello, World!")
-	logrus.info("Logging with Logrus")
+	logrus.Info("Logging with Logrus")
 }
