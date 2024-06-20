@@ -36,7 +36,7 @@ func main() {
 	}
 
 	var wg sync.WaitGroup
-	// var mut sync.Mutex
+	var mut sync.Mutex
 	wg.Add(len(torrentFile.URLs))
 	var peerAddrs []net.TCPAddr
 
@@ -48,18 +48,18 @@ func main() {
 	}
 
 	for _, link := range torrentFile.URLs {
-		// go func() {
-		// 	defer wg.Done()
-		result, err := tracker.GetPeers(link, torrentFile.InfoHash, [20]byte(peerId))
-		if err != nil {
-			fmt.Printf("error getting peers from tracker %s: %s\n", link, err.Error())
-			continue
-		}
-		// mut.Lock()
-		fmt.Printf("Got Peers from tracker %s: %d\n", link, len(result))
-		peerAddrs = append(peerAddrs, result...)
-		// mut.Unlock()
-		// }()
+		go func() {
+			defer wg.Done()
+			result, err := tracker.GetPeers(link, torrentFile.InfoHash, [20]byte(peerId))
+			if err != nil {
+				fmt.Printf("error getting peers from tracker %s: %s\n", link, err.Error())
+				return
+			}
+			mut.Lock()
+			fmt.Printf("Got Peers from tracker %s: %d\n", link, len(result))
+			peerAddrs = append(peerAddrs, result...)
+			mut.Unlock()
+		}()
 	}
 
 	wg.Wait()
