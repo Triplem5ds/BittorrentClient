@@ -1,15 +1,15 @@
 package torrentfile
 
 import (
-	"fmt"
 	"bytes"
 	"crypto/sha1"
+	"fmt"
 
 	"github.com/jackpal/bencode-go"
 )
 
 type TorrentFile struct {
-	Announce    string
+	URLs        []string
 	InfoHash    [20]byte
 	PieceHashes [][20]byte
 	PieceLength int
@@ -25,12 +25,14 @@ type bencodeInfo struct {
 }
 
 type bencodeTorrent struct {
-	Announce string      `bencode:"announce"`
-	Info     bencodeInfo `bencode:"info"`
+	Announce     string      `bencode:"announce"`
+	AnnounceList [][]string  `bencode:"announce-list"`
+	URLList      []string    `bencode:"url-list"`
+	Info         bencodeInfo `bencode:"info"`
 }
 
-func (i* bencodeInfo) hash() ([20]byte, error) {
-	///Hash the info to check credibelity 
+func (i *bencodeInfo) hash() ([20]byte, error) {
+	///Hash the info to check credibelity
 
 	var buf bytes.Buffer
 	err := bencode.Marshal(&buf, *i)
@@ -41,11 +43,11 @@ func (i* bencodeInfo) hash() ([20]byte, error) {
 	return h, nil
 }
 
-func (i* bencodeInfo) splitPieceHashes() ([][20]byte, error) {
+func (i *bencodeInfo) splitPieceHashes() ([][20]byte, error) {
 	///take the piece hashes and split it into an array for pieces
 	///where ever arr[i] = hashPiece[i]
 	buf := []byte(i.Pieces)
-	if len(buf) % 20 !=0 {
+	if len(buf)%20 != 0 {
 		return nil, fmt.Errorf("Received malformed pieces of length %d", len(buf))
 	}
 
@@ -53,7 +55,7 @@ func (i* bencodeInfo) splitPieceHashes() ([][20]byte, error) {
 	hashes := make([][20]byte, hashesNum)
 
 	for i := 0; i < hashesNum; i++ {
-		copy(hashes[i][:], buf[i*20:(i + 1) * 20])
+		copy(hashes[i][:], buf[i*20:(i+1)*20])
 	}
 
 	return hashes, nil
@@ -72,14 +74,24 @@ func (bto *bencodeTorrent) toTorrentfile() (TorrentFile, error) {
 	if err != nil {
 		return TorrentFile{}, err
 	}
-	
-	return TorrentFile {
-		Announce: bto.Announce,
-		InfoHash: infoHash,
+	var trackerUrls []string
+
+	for _, list := range bto.AnnounceList {
+		trackerUrls = append(trackerUrls, list...)
+	}
+
+	trackerUrls = append(trackerUrls, bto.URLList...)
+	if len(trackerUrls) == 0 {
+		trackerUrls = append(trackerUrls, bto.Announce)
+	}
+
+	return TorrentFile{
+		URLs:        trackerUrls,
+		InfoHash:    infoHash,
 		PieceHashes: piecesHash,
 		PieceLength: bto.Info.PieceLength,
-		Length: bto.Info.Length,
-		Name: bto.Info.Name,
+		Length:      bto.Info.Length,
+		Name:        bto.Info.Name,
 	}, nil
 
 }
