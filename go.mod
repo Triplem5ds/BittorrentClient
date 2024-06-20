@@ -1,9 +1,9 @@
 module github.com/Triplem5ds/BittorrentClient
 
-go 1.18
+go 1.21.4
 
-require (
-	github.com/jackpal/bencode-go v1.0.2 // indirect
-	github.com/sirupsen/logrus v1.9.3 // indirect
-	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
-)
+toolchain go1.22.4
+
+require github.com/jackpal/bencode-go v1.0.2
+
+require github.com/zeebo/bencode v1.0.0 // indirect
